@@ -1,0 +1,489 @@
+:root {
+    --primary-color: #ff3d00;
+    --accent-color: #ffb74d;
+    --text-dark: #1a1a1a;
+    --text-light: #ffffff;
+    --glass-bg: rgba(255, 255, 255, 0.15);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    --font-ui: 'Montserrat', sans-serif;
+    --font-heading: 'Bebas Neue', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+body,
+html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: var(--font-ui);
+    background-color: transparent;
+    /* Transparent to let video show through if needed, though video is fixed */
+    /* Cinematic dark base handled by overlays */
+}
+
+/* --- Atmospheric Layers --- */
+#video-background-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    /* Behind atmosphere (-1) but visible */
+    overflow: hidden;
+}
+
+#bg-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    transform: translate(-50%, -50%);
+    object-fit: cover;
+}
+
+/* Fallback/Overlay if video fails or acts as tint */
+.video-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Transparent gradient to not hide video completely if both active? 
+       Actually, usually one or the other. We'll leave it behind the video or hide it when video loads?
+       For now, let's make it a tint overlay. */
+    background: transparent;
+    pointer-events: none;
+}
+
+#atmosphere-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(0, 0, 0, 0.4) 100%);
+    /* Vignette */
+}
+
+#sunlight-overlay {
+    position: fixed;
+    top: -20%;
+    left: -20%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
+    filter: blur(80px);
+    z-index: -1;
+    pointer-events: none;
+    animation: drift 20s infinite alternate ease-in-out;
+}
+
+@keyframes drift {
+    from {
+        transform: translate(0, 0);
+    }
+
+    to {
+        transform: translate(50px, 20px);
+    }
+}
+
+/* --- Scene Interactions --- */
+#app-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#scene-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: grab;
+    z-index: 1;
+}
+
+#scene-container:active {
+    cursor: grabbing;
+}
+
+#volcano-wrapper {
+    position: relative;
+    width: 1000px;
+    height: 750px;
+    transform-origin: center center;
+    transition: transform 0.15scubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+#volcano-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.5));
+}
+
+#labels-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 4;
+    /* Above interaction layer */
+    pointer-events: none;
+}
+
+.label {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    opacity: 0.8;
+    pointer-events: auto;
+    /* Enable clicks */
+}
+
+/* Optional: Connect label to point with a line or dot? For now, just floating. */
+.label::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.6) transparent transparent transparent;
+}
+
+.label:hover,
+.interaction-zone:hover+.label {
+    /* Hard to target previous sibling via CSS, but JS handles interaction */
+    opacity: 1;
+    transform: translate(-50%, -55%) scale(1.1);
+    background: rgba(255, 61, 0, 0.8);
+    border-color: rgba(255, 200, 0, 0.5);
+}
+
+/* --- Interactive Zones --- */
+#interaction-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+}
+
+.interaction-zone {
+    fill: transparent;
+    stroke: transparent;
+    cursor: pointer;
+    transition: fill 0.3s ease;
+}
+
+/* Hover effects for zones (Desktop) */
+@media (hover: hover) {
+    .interaction-zone:hover {
+        fill: rgba(255, 255, 200, 0.1);
+        filter: drop-shadow(0 0 10px rgba(255, 200, 0, 0.5));
+    }
+}
+
+.interaction-zone:active {
+    fill: rgba(255, 255, 200, 0.3);
+}
+
+#particle-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    /* Makes fire look glowing */
+}
+
+/* --- UI Layers (Glassmorphism) --- */
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 30px;
+}
+
+header h1 {
+    font-family: var(--font-heading);
+    font-size: 4rem;
+    color: white;
+    text-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    pointer-events: auto;
+    letter-spacing: 2px;
+}
+
+header h1 .highlight {
+    color: var(--accent-color);
+}
+
+/* Glass Panels */
+.glass-panel,
+.glass-dock {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: 24px;
+    pointer-events: auto;
+}
+
+/* Character Card */
+#character-container {
+    position: absolute;
+    bottom: 140px;
+    right: 40px;
+    width: 400px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    transform-origin: bottom right;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+}
+
+#character-container.hidden {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+    pointer-events: none;
+}
+
+.character-content {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+}
+
+#explorer-character {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    margin-left: 15px;
+    background: #fff;
+}
+
+.speech-bubble {
+    flex: 1;
+    color: white;
+}
+
+.speech-bubble h3 {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+    color: var(--accent-color);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.speech-bubble p {
+    font-size: 1rem;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: white;
+}
+
+
+/* Bottom Dock */
+#bottom-controls {
+    align-self: center;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px 20px;
+    border-radius: 50px;
+    /* Pill shape */
+    margin-bottom: 20px;
+}
+
+.separator {
+    width: 1px;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.action-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 10px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.action-btn .icon {
+    font-size: 1.4rem;
+}
+
+/* Button Styles */
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.action-btn:active {
+    transform: scale(0.95);
+}
+
+.fire-style:hover {
+    box-shadow: 0 0 20px rgba(255, 61, 0, 0.4);
+    text-shadow: 0 0 10px rgba(255, 61, 0, 0.8);
+    background: rgba(255, 61, 0, 0.1);
+}
+
+.meteor-style:hover {
+    box-shadow: 0 0 20px rgba(0, 191, 255, 0.4);
+    text-shadow: 0 0 10px rgba(0, 191, 255, 0.8);
+    background: rgba(0, 191, 255, 0.1);
+}
+
+/* --- Dark Mode / Event States --- */
+body.dark-mode .video-placeholder {
+    background: radial-gradient(circle at center, #2c3e50 0%, #000000 100%);
+}
+
+body.dark-mode #atmosphere-overlay {
+    background: radial-gradient(circle at 50% 50%, transparent 20%, rgba(0, 0, 0, 0.8) 100%);
+}
+
+/* Shake Animation */
+.shake {
+    animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both infinite;
+}
+
+@keyframes shake {
+
+    10%,
+    90% {
+        transform: translate3d(-1px, 0, 0) rotate(-1deg);
+    }
+
+    20%,
+    80% {
+        transform: translate3d(2px, 0, 0) rotate(1deg);
+    }
+
+    30%,
+    50%,
+    70% {
+        transform: translate3d(-4px, 0, 0) rotate(-1deg);
+    }
+
+    40%,
+    60% {
+        transform: translate3d(4px, 0, 0) rotate(1deg);
+    }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    header h1 {
+        font-size: 3rem;
+    }
+
+    #volcano-wrapper {
+        width: 100%;
+        height: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    #ui-layer {
+        padding: 15px;
+    }
+
+    header h1 {
+        font-size: 2rem;
+    }
+
+    #character-container {
+        width: 90%;
+        bottom: 100px;
+        right: 5%;
+        left: 5%;
+    }
+
+    #bottom-controls {
+        width: 90%;
+        justify-content: space-around;
+    }
+
+    .action-btn .label {
+        display: none;
+    }
+
+    /* Show only icons on small screens? Or smaller text */
+    .action-btn .label {
+        display: block;
+        font-size: 0.8rem;
+    }
+}
