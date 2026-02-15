@@ -406,6 +406,33 @@ header h1 .highlight {
     background: rgba(0, 191, 255, 0.1);
 }
 
+/* Video Toggle */
+#btn-video-toggle {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 50;
+    pointer-events: auto;
+}
+
+#btn-video-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
 /* --- Dark Mode / Event States --- */
 body.dark-mode .video-placeholder {
     background: radial-gradient(circle at center, #2c3e50 0%, #000000 100%);
@@ -484,6 +511,18 @@ body.dark-mode #atmosphere-overlay {
     /* Show only icons on small screens? Or smaller text */
     .action-btn .label {
         display: block;
-        font-size: 0.8rem;
+        font-size: 0.7rem;
+        /* Smaller font for mobile */
     }
+
+    .action-btn {
+        padding: 8px 16px;
+        /* Smaller padding */
+    }
+}
+
+.water-style:hover {
+    box-shadow: 0 0 20px rgba(0, 191, 255, 0.4);
+    text-shadow: 0 0 10px rgba(0, 191, 255, 0.8);
+    background: rgba(0, 191, 255, 0.1);
 }

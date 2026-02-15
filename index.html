@@ -6,7 +6,8 @@
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Vulkan Entdecker</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/favicon.svg">
+    <link rel="stylesheet" href="css/style.css?v=7">
     <!-- Google Fonts: Montserrat for UI, Bebas Neue for Headlines -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -70,10 +71,19 @@
                     onclick="document.getElementById('character-container').classList.add('hidden')">×</button>
             </div>
 
+            <!-- Video Controls (Top Right) -->
+            <button id="btn-video-toggle" class="glass-panel" title="Hintergrundvideo pausieren/abspielen">
+                ⏸️
+            </button>
+
             <!-- Bottom Controls (Floating Glass Dock) -->
             <nav id="bottom-controls" class="glass-dock">
                 <button id="btn-eruption" class="action-btn fire-style">
                     <span class="icon">🌋</span>
+                </button>
+                <div class="separator"></div>
+                <button id="btn-reset" class="action-btn water-style">
+                    <span class="icon">🔄</span>
                 </button>
             </nav>
 
@@ -113,7 +123,7 @@
         });
     </script>
 
-    <script type="module" src="js/script.js"></script>
+    <script type="module" src="js/script.js?v=14"></script>
 </body>
 
 </html>
